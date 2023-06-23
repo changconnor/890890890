@@ -1,0 +1,49 @@
+import nltk
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize, sent_tokenize
+from heapq import nlargest
+
+def summarize_text(text, num_sentences=3):
+    # Tokenize the text into sentences
+    sentences = sent_tokenize(text)
+
+    # Tokenize the text into words
+    words = word_tokenize(text)
+
+    # Filter out stopwords
+    stop_words = set(stopwords.words('english'))
+    words = [word.lower() for word in words if word.isalnum() and word.lower() not in stop_words]
+
+    # Calculate word frequencies
+    word_frequencies = nltk.FreqDist(words)
+
+    # Assign scores to sentences based on word frequencies
+    sentence_scores = {}
+    for sentence in sentences:
+        for word in word_tokenize(sentence.lower()):
+            if word in word_frequencies:
+                if len(sentence.split()) < 30:
+                    if sentence not in sentence_scores:
+                        sentence_scores[sentence] = word_frequencies[word]
+                    else:
+                        sentence_scores[sentence] += word_frequencies[word]
+
+    # Get top N sentences with highest scores
+    summary_sentences = nlargest(num_sentences, sentence_scores, key=sentence_scores.get)
+
+    # Combine and return the summary
+    summary = ' '.join(summary_sentences)
+    return summary
+
+# Example usage
+text = '''
+    Text summarization is the process of distilling the most important information from a source text
+    and presenting it in a concise form. There are two main types of text summarization: extractive
+    and abstractive. Extractive summarization involves selecting the most relevant sentences or phrases
+    from the original text, while abstractive summarization involves generating new sentences that capture
+    the essence of the original text. Summarization has applications in various domains such as news
+    summarization, document summarization, and automatic summarization of social media posts.
+'''
+
+summary = summarize_text(text)
+print(summary)
